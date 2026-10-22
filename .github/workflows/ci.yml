@@ -48,7 +48,7 @@ jobs:
       with:
         name: tasks-api-3.12-bandit-report
         path: _site
-    - run: ls _site
+    - run: mv _site/tasks-api-3.12-bandit-report.html _site/index.html
     - uses: actions/upload-pages-artifact@v5
       with:
         path: _site/
