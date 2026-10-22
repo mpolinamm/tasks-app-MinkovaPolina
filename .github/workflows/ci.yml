@@ -65,5 +65,5 @@ jobs:
       with:
         path: _site/
     - id: deployment
-        uses: actions/deploy-pages@v5
+    - uses: actions/deploy-pages@v5
       
