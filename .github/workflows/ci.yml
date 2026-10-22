@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    types: [closed]
-    branches:
-      - main
-
 
 jobs:
   run_tests:
@@ -38,3 +33,24 @@ jobs:
         with:
           name: ${{matrix.service}}-${{matrix.python-version}}-bandit-report
           path: ${{matrix.service}}-${{matrix.python-version}}-bandit-report.html
+
+  deploy:
+    needs: run_tests
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    permissions:
+      pages: write # default is none so no deployment to pages allowed unsless we set it
+      id-token: write
+    steps:
+    - uses: actions/download-artifact@v7
+      with:
+        name: tasks-api-3.12-bandit-report
+        path: _site
+    - run: ls _site
+    - uses: actions/upload-pages-artifact@v5
+      with:
+        path: _site/
+    - uses: actions/deploy-pages@v5 # outputs page_url
+      id: deployment
