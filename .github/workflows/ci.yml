@@ -49,7 +49,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v8
       with:
-        name: tasks-api-3.12-bandit-report
+        name: tasks-api-3.12-bandit-report+ `
         path: _site
     - uses: actions/download-artifact@v8
       with:
