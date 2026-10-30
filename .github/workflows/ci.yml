@@ -66,32 +66,43 @@ jobs:
       - run: docker build -t ${{ matrix.service }} services/${{ matrix.service }}
 
   deploy:
-    needs: run_tests
+    needs: [run_tests, generate_api_docs]
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
-      url: ${{steps.deployment.outputs.page_url}}
-    permissions:
-      pages: write # default is none so no deployment to pages allowed unsless we set it
-      id-token: write
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-    - uses: actions/download-artifact@v8
-      with:
-        name: tasks-api-3.12-bandit-report+ `
-        path: _site
-    - uses: actions/download-artifact@v8
-      with:
-        name: title-normalizer-3.12-bandit-report
-        path: _site
-    - run: |
+      - uses: actions/download-artifact@v8
+        with:
+          name: tasks-api-3.12-bandit-report
+          path: _site
+      - uses: actions/download-artifact@v8
+        with:
+          name: title-normalizer-3.12-bandit-report
+          path: _site
+      - uses: actions/download-artifact@v8
+        with:
+          name: tasks-api-api-docs
+          path: _site/tasks-api-apidocs
+      - uses: actions/download-artifact@v8
+        with:
+          name: title-normalizer-api-docs
+          path: _site/title-normalizer-apidocs
+      - run: |
           cat > _site/index.html <<'EOF'
           <h1>Bandit reports</h1>
           <p><a href="tasks-api-3.12-bandit-report.html">tasks-api</a></p>
           <p><a href="title-normalizer-3.12-bandit-report.html">title-normalizer</a></p>
+          <h1>API docs</h1>
+          <p><a href="tasks-api-apidocs/index.html">tasks-api</a></p>
+          <p><a href="title-normalizer-apidocs/index.html">title-normalizer</a></p>
           EOF
-    - uses: actions/upload-pages-artifact@v5
-      with:
-        path: _site/
-    - uses: actions/deploy-pages@v5
-      id: deployment
-      
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5
