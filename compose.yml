@@ -1,0 +1,12 @@
+services:
+  tasks-api:
+    build:
+      context: ./services/tasks-api
+    ports:
+      - "5000:5000"
+
+  title-normalizer:
+    build:
+      context: ./services/title-normalizer
+    ports:
+      - "5001:5001"
