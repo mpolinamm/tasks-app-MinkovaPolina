@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, closed]
     branches:
       - main
 
@@ -56,6 +57,15 @@ jobs:
           name: ${{matrix.service}}-api-docs
           path: services/${{matrix.service}}/apidocs
 
+  build_images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [tasks-api, title-normalizer] # ${{matrix.service}}
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t ${{matrix.service}} services/${{matrix.service}}
+
   publish_images:
     needs: build_images
     if: github.event_name == 'push'
@@ -65,23 +75,20 @@ jobs:
       packages: write
     strategy:
       matrix:
-        service: [tasks-api, title-normalizer]
+        service: [tasks-api, title-normalizer] # ${{matrix.service}}
     steps:
       - uses: actions/checkout@v7
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }} services/${{ matrix.service }}
-
-      - run: docker push ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}
-
-  build_images:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [tasks-api, title-normalizer]
-    steps:
-      - uses: actions/checkout@v7
-      - run: docker build -t ${{ matrix.service }} services/${{ matrix.service }}
+      - run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" |
+            docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${{matrix.service}}"
+          IMAGE="$IMAGE:${{ github.sha }}"
+          SOURCE="https://github.com/${{ github.repository }}"
+          docker build \
+            --label "org.opencontainers.image.source=$SOURCE" \
+            -t "$IMAGE" services/${{matrix.service}}
+          docker push "$IMAGE"
 
   deploy:
     needs: [run_tests, generate_api_docs]
