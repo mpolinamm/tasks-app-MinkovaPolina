@@ -27,7 +27,7 @@ def client(stub):
 
 def test_health(client):
     response = client.get("/health")
-    assert response.status_code == 200
+    assert response.status_code == 999 #CHANGED
     assert response.get_json() == {"status": "ok"}
 
 
